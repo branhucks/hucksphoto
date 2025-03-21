@@ -119,10 +119,21 @@
         // Function to handle resize and layout
         function resizeGridItems() {
             items.forEach(item => {
-                const rowSpan = Math.ceil(item.querySelector('img').getBoundingClientRect().height / 10);
-                item.style.gridRowEnd = 'span ' + rowSpan;
+                const img = item.querySelector('img');
+                if (img.complete) {
+                    const rowSpan = Math.ceil(img.getBoundingClientRect().height / 10);
+                    item.style.gridRowEnd = 'span ' + rowSpan;
+                }
             });
         }
+
+        // Add event listeners for when lazy-loaded images finish loading
+        items.forEach(item => {
+            const img = item.querySelector('img');
+            img.addEventListener('load', function() {
+                resizeGridItems();
+            });
+        });
         
         // Initial layout after images load
         imagesLoaded(grid, function() {
