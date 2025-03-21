@@ -8,10 +8,10 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Photo)
 class PhotoAdmin(admin.ModelAdmin):
-    list_display = ('title', 'featured', 'date_taken', 'created_at')
-    list_filter = ('featured', 'categories')
+    list_display = ('title', 'featured', 'date_taken', 'created_at', 'simulation', 'camera')
+    list_filter = ('featured', 'categories', 'simulation', 'camera')
     prepopulated_fields = {'slug': ('title',)}
-    search_fields = ('title', 'description', 'location')
+    search_fields = ('title', 'description', 'location', 'simulation', 'camera')
     filter_horizontal = ('categories',)
 
 @admin.register(About)

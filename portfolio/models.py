@@ -22,10 +22,11 @@ class Photo(models.Model):
     slug = models.SlugField(unique=True, blank=True)
     description = models.TextField(blank=True)
     image = models.ImageField(upload_to='photos/')
-    thumbnail = models.ImageField(upload_to='photos/thumbnails/', blank=True)
     categories = models.ManyToManyField(Category, related_name='photos')
     date_taken = models.DateField(blank=True, null=True)
     location = models.CharField(max_length=200, blank=True)
+    simulation = models.CharField(max_length=200, blank=True)
+    camera = models.CharField(max_length=200, default="Fuji X-T50")
     featured = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -33,9 +34,7 @@ class Photo(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
-        
-        # You could add thumbnail generation here using Pillow
-        
+                
     def __str__(self):
         return self.title
 
