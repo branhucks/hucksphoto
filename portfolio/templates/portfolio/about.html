@@ -1,0 +1,93 @@
+{% extends 'portfolio/base.html' %}
+
+{% block title %}About | Your Name{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <div class="py-16 max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold mb-12 text-center">About Me</h1>
+        
+        {% if about %}
+        <div class="flex flex-col md:flex-row gap-12 items-center">
+            {% if about.profile_image %}
+            <div class="md:w-1/3">
+                <div class="rounded-lg overflow-hidden">
+                    <img src="{{ about.profile_image.url }}" alt="Profile" class="w-full h-auto">
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="{% if about.profile_image %}md:w-2/3{% endif %}">
+                <div class="prose prose-lg max-w-none">
+                    {{ about.bio|linebreaks }}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <p>Biography information is coming soon.</p>
+        </div>
+        {% endif %}
+        
+        <!-- Photography approach -->
+        <div class="mt-16">
+            <h2 class="text-2xl font-bold mb-6">My Approach to Photography</h2>
+            <div class="prose prose-lg max-w-none">
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in dui mauris. Vivamus hendrerit arcu sed erat molestie vehicula. Sed auctor neque eu tellus rhoncus ut eleifend nibh porttitor. Ut in nulla enim.</p>
+                
+                <p>Phasellus molestie magna non est bibendum non venenatis nisl tempor. Suspendisse dictum feugiat nisl ut dapibus. Mauris iaculis porttitor posuere. Praesent id metus massa, ut blandit odio.</p>
+            </div>
+        </div>
+        
+        <!-- Equipment -->
+        <div class="mt-16">
+            <h2 class="text-2xl font-bold mb-6">Equipment</h2>
+            <div class="bg-gray-50 p-8 rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-xl font-medium mb-4">Cameras</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-photo-accent mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Canon EOS R5</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-photo-accent mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Sony Alpha a7 III</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-xl font-medium mb-4">Lenses</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-photo-accent mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Canon RF 24-70mm f/2.8L IS USM</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-photo-accent mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Sony FE 16-35mm f/2.8 GM</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-photo-accent mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Canon RF 70-200mm f/2.8L IS USM</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

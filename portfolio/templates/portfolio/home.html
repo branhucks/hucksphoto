@@ -1,0 +1,57 @@
+{% extends 'portfolio/base.html' %}
+
+{% block title %}Your Name | Photography{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <!-- Hero section -->
+    <section class="min-h-[80vh] flex flex-col items-center justify-center text-center">
+        <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tighter">Your Name</h1>
+        <p class="text-xl md:text-2xl mb-12 max-w-2xl mx-auto">Fine Art Photographer capturing the beauty of the world through a unique perspective.</p>
+        <a href="{% url 'portfolio:gallery' %}" class="px-8 py-3 bg-photo-dark text-white hover:bg-photo-accent transition-colors duration-300 uppercase tracking-widest text-sm">View Gallery</a>
+    </section>
+    
+    <!-- Featured work section -->
+    <section class="py-16">
+        <h2 class="text-3xl font-bold mb-12 text-center">Featured Work</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for photo in photos %}
+            <div class="group relative overflow-hidden aspect-square">
+                <img src="{{ photo.image.url }}" alt="{{ photo.title }}" class="object-cover w-full h-full transform transition-transform duration-500 group-hover:scale-105">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                    <h3 class="text-white text-xl font-bold">{{ photo.title }}</h3>
+                    <p class="text-white/80 mt-2">{{ photo.description|truncatechars:100 }}</p>
+                    <a href="{% url 'portfolio:photo_detail' photo.slug %}" class="mt-4 inline-block text-photo-accent hover:underline">View Photo</a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-12">
+                <p>No featured photos available yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-12">
+            <a href="{% url 'portfolio:gallery' %}" class="px-8 py-3 border border-photo-dark hover:bg-photo-dark hover:text-white transition-colors duration-300 uppercase tracking-widest text-sm">View All Work</a>
+        </div>
+    </section>
+    
+    <!-- Categories section -->
+    <section class="py-16 bg-photo-dark text-white">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-3xl font-bold mb-12 text-center">Explore Categories</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {% for category in categories %}
+                <a href="{% url 'portfolio:category_gallery' category.slug %}" class="block p-6 border border-white/20 hover:border-photo-accent hover:bg-black/30 transition-all duration-300 text-center">
+                    <h3 class="text-xl font-semibold">{{ category.name }}</h3>
+                    <p class="mt-2 text-white/70">{{ category.description|truncatechars:60 }}</p>
+                </a>
+                {% empty %}
+                <div class="col-span-full text-center py-8">
+                    <p>No categories available yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends 'portfolio/base.html' %}
+
+{% block title %}
+    {% if current_category %}
+        {{ current_category.name }} | 
+    {% endif %}
+    Gallery | Your Name
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .category-filter:hover .hover-line {
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <!-- Gallery header -->
+    <header class="py-8 text-center">
+        <h1 class="text-4xl font-bold mb-6">
+            {% if current_category %}
+                {{ current_category.name }}
+            {% else %}
+                Photography Gallery
+            {% endif %}
+        </h1>
+        {% if current_category %}
+            <p class="max-w-3xl mx-auto mb-8">{{ current_category.description }}</p>
+        {% endif %}
+        
+        <!-- Category filters -->
+        <div class="flex flex-wrap justify-center gap-4 mt-8">
+            <a href="{% url 'portfolio:gallery' %}" class="category-filter relative px-4 py-2 {% if not current_category %}text-photo-accent font-medium{% endif %}">
+                All
+                {% if not current_category %}
+                <div class="absolute bottom-0 left-0 w-full h-0.5 bg-photo-accent"></div>
+                {% else %}
+                <div class="hover-line absolute bottom-0 left-0 w-0 h-0.5 bg-photo-accent transition-all duration-300"></div>
+                {% endif %}
+            </a>
+            
+            {% for category in categories %}
+            <a href="{% url 'portfolio:category_gallery' category.slug %}" class="category-filter relative px-4 py-2 {% if current_category.id == category.id %}text-photo-accent font-medium{% endif %}">
+                {{ category.name }}
+                {% if current_category.id == category.id %}
+                <div class="absolute bottom-0 left-0 w-full h-0.5 bg-photo-accent"></div>
+                {% else %}
+                <div class="hover-line absolute bottom-0 left-0 w-0 h-0.5 bg-photo-accent transition-all duration-300"></div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </header>
+    
+    <!-- Gallery grid -->
+    <div class="masonry-grid">
+        {% for photo in photos %}
+        <div class="masonry-item overflow-hidden">
+            <a href="{% url 'portfolio:photo_detail' photo.slug %}" class="block group">
+                <div class="relative overflow-hidden">
+                    <img data-src="{{ photo.image.url }}" alt="{{ photo.title }}" class="lazy-load w-full transition-transform duration-500 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                        <h3 class="text-white text-lg font-medium">{{ photo.title }}</h3>
+                        {% if photo.location %}
+                        <p class="text-white/80 text-sm mt-1">{{ photo.location }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-span-full py-16 text-center">
+            <p class="text-lg">No photos available in this category yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="flex justify-center my-12">
+        <div class="inline-flex">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-l-md hover:bg-gray-50">
+                Previous
+            </a>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <span class="px-4 py-2 border border-gray-300 bg-photo-accent text-white text-sm font-medium">
+                    {{ num }}
+                </span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}" class="px-4 py-2 border border-gray-300 text-sm font-medium hover:bg-gray-50">
+                    {{ num }}
+                </a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md hover:bg-gray-50">
+                Next
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+    // Masonry layout
+    document.addEventListener('DOMContentLoaded', function() {
+        const grid = document.querySelector('.masonry-grid');
+        const items = document.querySelectorAll('.masonry-item');
+        
+        // Function to handle resize and layout
+        function resizeGridItems() {
+            items.forEach(item => {
+                const rowSpan = Math.ceil(item.querySelector('img').getBoundingClientRect().height / 10);
+                item.style.gridRowEnd = 'span ' + rowSpan;
+            });
+        }
+        
+        // Initial layout after images load
+        imagesLoaded(grid, function() {
+            resizeGridItems();
+        });
+        
+        // Update on window resize
+        window.addEventListener('resize', resizeGridItems);
+    });
+</script>
+{% endblock %}
+
+{% endblock %}
