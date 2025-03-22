@@ -23,7 +23,7 @@ class GalleryView(ListView):
     paginate_by = 12
     
     def get_queryset(self):
-        queryset = Photo.objects.all().order_by('-date_taken')
+        queryset = Photo.objects.all().order_by('?')
         category_slug = self.kwargs.get('category_slug')
         
         if category_slug:
