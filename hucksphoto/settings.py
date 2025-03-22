@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'portfolio',
+    'captcha',
 ]
 
 MIDDLEWARE = [
@@ -150,3 +151,12 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER')
+
+# Captcha settings
+CAPTCHA_LENGTH = 6  # Number of characters in the captcha
+CAPTCHA_FONT_SIZE = 30  # Size of the font
+CAPTCHA_LETTER_ROTATION = (-35, 35)  # Range of letter rotation
+CAPTCHA_TIMEOUT = 5  # Time in minutes before captcha expires
+CAPTCHA_NOISE_FUNCTIONS = ('captcha.helpers.noise_dots',)  # Type of noise
+CAPTCHA_BACKGROUND_COLOR = '#ffffff'  # Background color
+CAPTCHA_FOREGROUND_COLOR = '#001100'  # Text color

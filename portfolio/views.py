@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import Photo, Category, About, Contact
+from .forms import ContactForm
 
 class HomeView(ListView):
     model = Photo
@@ -86,47 +87,53 @@ class ContactView(TemplateView):
     template_name = 'portfolio/contact.html'
     
     def get_context_data(self, **kwargs):
-        import os
-        
         context = super().get_context_data(**kwargs)
         context['contact'] = Contact.objects.first()
+        context['form'] = ContactForm()
         return context
         
     def post(self, request, *args, **kwargs):
-        name = request.POST.get('name', '')
-        subject = request.POST.get('subject', '')
-        message = request.POST.get('message', '')
-        email = request.POST.get('email', '')
+        form = ContactForm(request.POST)
         
-        # Validate the form data
-        if not name or not subject or not message:
-            messages.error(request, "Please fill out all fields.")
-            return redirect('portfolio:contact')
-        
-        # Get the contact information
-        contact = Contact.objects.first()
-        recipient_email = contact.email
-        
-        try:
-            # Format the email message
-            email_message = f"Name: {name}\nEmail: {email}\n\n{message}"
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            email = form.cleaned_data['email']
+            subject = form.cleaned_data['subject']
+            message = form.cleaned_data['message']
             
-            # Send the email
-            send_mail(
-                subject=f"Contact Form: {subject}",
-                message=email_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[recipient_email],
-                fail_silently=False,
-            )
+            # Get the contact information
+            contact = Contact.objects.first()
+            recipient_email = contact.email
             
-            # Add success message
-            messages.success(request, "Your message has been sent successfully!")
-            
-        except Exception as e:
-            # Add more detailed error message that includes the exception
-            error_message = f"Error: {str(e)}"
-            print(error_message)  # This will appear in your console/logs
-            messages.error(request, "There was an error sending your message. Please try again later.")
+            try:
+                # Format the email message
+                email_message = f"Name: {name}\nEmail: {email}\n\n{message}"
+                
+                # Send the email
+                send_mail(
+                    subject=f"Contact Form: {subject}",
+                    message=email_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[recipient_email],
+                    fail_silently=False,
+                )
+                
+                # Add success message
+                messages.success(request, "Your message has been sent successfully!")
+                return redirect('portfolio:contact')
+                
+            except Exception as e:
+                # Add more detailed error message that includes the exception
+                error_message = f"Error: {str(e)}"
+                print(error_message)  # This will appear in your console/logs
+                messages.error(request, "There was an error sending your message. Please try again later.")
+        else:
+            # If form is invalid, return the form with errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
         
-        return redirect('portfolio:contact')
+        # Return the form with errors
+        context = self.get_context_data()
+        context['form'] = form
+        return render(request, self.template_name, context)
