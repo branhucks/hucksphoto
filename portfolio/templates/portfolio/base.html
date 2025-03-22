@@ -46,10 +46,13 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-photo-light text-photo-dark min-h-screen flex flex-col">
+    {% load static %}
     <!-- Navigation -->
     <header class="fixed w-full bg-photo-light/90 backdrop-blur-sm z-50">
         <nav class="container mx-auto px-4 py-6 flex justify-between items-center">
-            <a href="{% url 'portfolio:home' %}" class="text-2xl font-bold tracking-tight">Brandon Hucks</a>
+            <a href="{% url 'portfolio:home' %}" class="flex items-center">
+                <img src="{% static 'portfolio/img/hucksphoto.png' %}" alt="Brandon Hucks Logo" class="h-10">
+            </a>
             
             <!-- Mobile menu button -->
             <button id="mobile-menu-button" class="md:hidden">
