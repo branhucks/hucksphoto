@@ -9,24 +9,59 @@
 
 {% block extra_head %}
 <style>
-    .category-filter:hover .hover-line {
+    .category-filter {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    .category-filter::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 1px;
+        background-color: #D4AF37;
+        transition: width 0.3s ease;
+    }
+    .category-filter:hover::after,
+    .category-filter.active::after {
+        width: 100%;
+    }
+    .category-filter.active {
+        color: #D4AF37;
+        font-weight: 500;
+    }
+    .sort-option {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    .sort-option::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 1px;
+        background-color: #D4AF37;
+        transition: width 0.3s ease;
+    }
+    .sort-option:hover::after,
+    .sort-option.active::after {
         width: 100%;
     }
     .sort-option.active {
         color: #D4AF37;
         font-weight: 500;
     }
-    .sort-option:hover .hover-line {
-        width: 100%;
-    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4">
+<div class="container mx-auto px-4 max-w-6xl">
     <!-- Gallery header -->
-    <header class="py-8 text-center">
-        <h1 class="text-4xl font-bold mb-6">
+    <header class="py-10">
+        <!-- Title and description -->
+        <h1 class="text-4xl font-bold mb-4 text-center">
             {% if current_category %}
                 {{ current_category.name }}
             {% else %}
@@ -34,91 +69,71 @@
             {% endif %}
         </h1>
         {% if current_category %}
-            <p class="max-w-3xl mx-auto mb-8">{{ current_category.description }}</p>
+            <p class="max-w-3xl mx-auto mb-10 text-center text-gray-600">{{ current_category.description }}</p>
         {% endif %}
         
-        <!-- Search form -->
-        <div class="max-w-lg mx-auto mb-8">
-            <form method="get" class="flex">
-                <input type="text" name="search" value="{{ search_query }}" placeholder="Search by title or location..." 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-photo-accent focus:border-photo-accent">
-                <button type="submit" class="px-4 py-2 bg-photo-accent text-white rounded-r-md hover:bg-opacity-90 transition-all">
-                    Search
-                </button>
-            </form>
-        </div>
-        
         <!-- Category filters -->
-        <div class="flex flex-wrap justify-center gap-4 mt-8">
-            <a href="{% url 'portfolio:gallery' %}{% if search_query %}?search={{ search_query }}{% if sort_by != 'random' %}&sort={{ sort_by }}{% endif %}{% elif sort_by != 'random' %}?sort={{ sort_by }}{% endif %}" 
-               class="category-filter relative px-4 py-2 {% if not current_category %}text-photo-accent font-medium{% endif %}">
-                All
-                {% if not current_category %}
-                <div class="absolute bottom-0 left-0 w-full h-0.5 bg-photo-accent"></div>
-                {% else %}
-                <div class="hover-line absolute bottom-0 left-0 w-0 h-0.5 bg-photo-accent transition-all duration-300"></div>
-                {% endif %}
-            </a>
-            
-            {% for category in categories %}
-            <a href="{% url 'portfolio:category_gallery' category.slug %}{% if search_query %}?search={{ search_query }}{% if sort_by != 'random' %}&sort={{ sort_by }}{% endif %}{% elif sort_by != 'random' %}?sort={{ sort_by }}{% endif %}"
-               class="category-filter relative px-4 py-2 {% if current_category.id == category.id %}text-photo-accent font-medium{% endif %}">
-                {{ category.name }}
-                {% if current_category.id == category.id %}
-                <div class="absolute bottom-0 left-0 w-full h-0.5 bg-photo-accent"></div>
-                {% else %}
-                <div class="hover-line absolute bottom-0 left-0 w-0 h-0.5 bg-photo-accent transition-all duration-300"></div>
-                {% endif %}
-            </a>
-            {% endfor %}
+        <div class="mb-10">
+            <div class="flex flex-wrap justify-center gap-6 pb-2">
+                <a href="{% url 'portfolio:gallery' %}{% if search_query %}?search={{ search_query }}{% if sort_by != 'random' %}&sort={{ sort_by }}{% endif %}{% elif sort_by != 'random' %}?sort={{ sort_by }}{% endif %}" 
+                   class="category-filter px-2 py-1 text-sm uppercase tracking-wider {% if not current_category %}active{% endif %}">
+                    All
+                </a>
+                
+                {% for category in categories %}
+                <a href="{% url 'portfolio:category_gallery' category.slug %}{% if search_query %}?search={{ search_query }}{% if sort_by != 'random' %}&sort={{ sort_by }}{% endif %}{% elif sort_by != 'random' %}?sort={{ sort_by }}{% endif %}"
+                   class="category-filter px-2 py-1 text-sm uppercase tracking-wider {% if current_category.id == category.id %}active{% endif %}">
+                    {{ category.name }}
+                </a>
+                {% endfor %}
+            </div>
         </div>
         
-        <!-- Sorting options -->
-        <div class="flex flex-wrap justify-center gap-4 mt-4">
-            <span class="text-sm text-gray-500">Sort by:</span>
-            {% url 'portfolio:gallery' as base_url %}
-            {% if current_category %}
-            {% url 'portfolio:category_gallery' current_category.slug as base_url %}
-            {% endif %}
+        <!-- Search and filters in horizontal layout -->
+        <div class="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+            <!-- Search form -->
+            <div class="md:w-1/2">
+                <form method="get" class="flex">
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Search by title or location..." 
+                           class="w-full px-4 py-2 border border-gray-200 rounded-l focus:outline-none focus:ring-1 focus:ring-photo-accent focus:border-photo-accent text-sm">
+                    <button type="submit" class="px-4 py-2 bg-photo-accent text-white rounded-r hover:bg-opacity-90 transition-all text-sm">
+                        Search
+                    </button>
+                </form>
+            </div>
             
-            <a href="{{ base_url }}{% if search_query %}?search={{ search_query }}{% if sort_by != 'random' %}&sort=random{% endif %}{% else %}?sort=random{% endif %}"
-               class="sort-option relative px-3 py-1 text-sm {% if sort_by == 'random' %}active{% endif %}">
-                Random
-                {% if sort_by == 'random' %}
-                <div class="absolute bottom-0 left-0 w-full h-0.5 bg-photo-accent"></div>
-                {% else %}
-                <div class="hover-line absolute bottom-0 left-0 w-0 h-0.5 bg-photo-accent transition-all duration-300"></div>
+            <!-- Sorting options -->
+            <div class="flex items-center gap-3 text-sm text-gray-600">
+                <span>Sort:</span>
+                {% url 'portfolio:gallery' as base_url %}
+                {% if current_category %}
+                {% url 'portfolio:category_gallery' current_category.slug as base_url %}
                 {% endif %}
-            </a>
-            
-            <a href="{{ base_url }}?{% if search_query %}search={{ search_query }}&{% endif %}sort=date_desc"
-               class="sort-option relative px-3 py-1 text-sm {% if sort_by == 'date_desc' %}active{% endif %}">
-                Newest First
-                {% if sort_by == 'date_desc' %}
-                <div class="absolute bottom-0 left-0 w-full h-0.5 bg-photo-accent"></div>
-                {% else %}
-                <div class="hover-line absolute bottom-0 left-0 w-0 h-0.5 bg-photo-accent transition-all duration-300"></div>
-                {% endif %}
-            </a>
-            
-            <a href="{{ base_url }}?{% if search_query %}search={{ search_query }}&{% endif %}sort=date_asc"
-               class="sort-option relative px-3 py-1 text-sm {% if sort_by == 'date_asc' %}active{% endif %}">
-                Oldest First
-                {% if sort_by == 'date_asc' %}
-                <div class="absolute bottom-0 left-0 w-full h-0.5 bg-photo-accent"></div>
-                {% else %}
-                <div class="hover-line absolute bottom-0 left-0 w-0 h-0.5 bg-photo-accent transition-all duration-300"></div>
-                {% endif %}
-            </a>
+                
+                <a href="{{ base_url }}{% if search_query %}?search={{ search_query }}{% if sort_by != 'random' %}&sort=random{% endif %}{% else %}?sort=random{% endif %}"
+                   class="sort-option px-2 py-1 {% if sort_by == 'random' %}active{% endif %}">
+                    Random
+                </a>
+                
+                <a href="{{ base_url }}?{% if search_query %}search={{ search_query }}&{% endif %}sort=date_desc"
+                   class="sort-option px-2 py-1 {% if sort_by == 'date_desc' %}active{% endif %}">
+                    Newest
+                </a>
+                
+                <a href="{{ base_url }}?{% if search_query %}search={{ search_query }}&{% endif %}sort=date_asc"
+                   class="sort-option px-2 py-1 {% if sort_by == 'date_asc' %}active{% endif %}">
+                    Oldest
+                </a>
+            </div>
         </div>
         
         <!-- Search results indicator -->
         {% if search_query %}
-        <div class="mt-4 text-sm">
+        <div class="mt-4 text-sm text-gray-500 flex justify-between items-center">
             <p>
-                Showing results for: <span class="font-medium">{{ search_query }}</span>
-                <a href="{{ base_url }}{% if sort_by != 'random' %}?sort={{ sort_by }}{% endif %}" class="ml-2 text-photo-accent hover:underline">Clear search</a>
+                Results for: <span class="font-medium text-gray-700">{{ search_query }}</span>
             </p>
+            <a href="{{ base_url }}{% if sort_by != 'random' %}?sort={{ sort_by }}{% endif %}" class="text-photo-accent hover:underline">Clear</a>
         </div>
         {% endif %}
     </header>
@@ -141,7 +156,7 @@
         </div>
         {% empty %}
         <div class="col-span-full py-16 text-center">
-            <p class="text-lg">
+            <p class="text-lg text-gray-500">
                 {% if search_query %}
                 No photos found matching "{{ search_query }}".
                 {% else %}
@@ -152,25 +167,25 @@
         {% endfor %}
     </div>
     
-    <!-- Pagination (updated to preserve search and sort parameters) -->
+    <!-- Pagination -->
     {% if is_paginated %}
     <div class="flex justify-center my-12">
         <div class="inline-flex">
             {% if page_obj.has_previous %}
             <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by != 'random' %}&sort={{ sort_by }}{% endif %}" 
-               class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-l-md hover:bg-gray-50">
+               class="px-4 py-2 border border-gray-200 text-sm rounded-l hover:bg-gray-50">
                 Previous
             </a>
             {% endif %}
             
             {% for num in page_obj.paginator.page_range %}
                 {% if page_obj.number == num %}
-                <span class="px-4 py-2 border border-gray-300 bg-photo-accent text-white text-sm font-medium">
+                <span class="px-4 py-2 border border-gray-200 bg-photo-accent text-white text-sm">
                     {{ num }}
                 </span>
                 {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                 <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by != 'random' %}&sort={{ sort_by }}{% endif %}" 
-                   class="px-4 py-2 border border-gray-300 text-sm font-medium hover:bg-gray-50">
+                   class="px-4 py-2 border border-gray-200 text-sm hover:bg-gray-50">
                     {{ num }}
                 </a>
                 {% endif %}
@@ -178,7 +193,7 @@
             
             {% if page_obj.has_next %}
             <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by != 'random' %}&sort={{ sort_by }}{% endif %}" 
-               class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md hover:bg-gray-50">
+               class="px-4 py-2 border border-gray-200 text-sm rounded-r hover:bg-gray-50">
                 Next
             </a>
             {% endif %}
@@ -189,7 +204,7 @@
 
 {% block extra_js %}
 <script>
-    // Masonry layout (unchanged)
+    // Masonry layout
     document.addEventListener('DOMContentLoaded', function() {
         const grid = document.querySelector('.masonry-grid');
         const items = document.querySelectorAll('.masonry-item');
