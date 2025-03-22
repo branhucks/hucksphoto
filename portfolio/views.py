@@ -3,6 +3,7 @@ from django.views.generic import ListView, DetailView, TemplateView
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db.models import Q
 from .models import Photo, Category, About, Contact
 from .forms import ContactForm
 
@@ -26,12 +27,31 @@ class GalleryView(ListView):
     paginate_by = 12
     
     def get_queryset(self):
-        queryset = Photo.objects.all().order_by('?')
-        category_slug = self.kwargs.get('category_slug')
+        # Start with base queryset
+        queryset = Photo.objects.all()
         
+        # Apply category filter if specified
+        category_slug = self.kwargs.get('category_slug')
         if category_slug:
             category = get_object_or_404(Category, slug=category_slug)
             queryset = queryset.filter(categories=category)
+        
+        # Apply search filter if provided
+        search_query = self.request.GET.get('search', '')
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) | 
+                Q(location__icontains=search_query)
+            )
+        
+        # Apply sorting
+        sort_by = self.request.GET.get('sort', 'random')
+        if sort_by == 'date_asc':
+            queryset = queryset.order_by('date_taken')
+        elif sort_by == 'date_desc':
+            queryset = queryset.order_by('-date_taken')
+        elif sort_by == 'random':
+            queryset = queryset.order_by('?')
             
         return queryset
     
@@ -39,6 +59,13 @@ class GalleryView(ListView):
         context = super().get_context_data(**kwargs)
         context['categories'] = Category.objects.all()
         
+        # Pass the search query to the template for form persistence
+        context['search_query'] = self.request.GET.get('search', '')
+        
+        # Pass the current sort option to the template
+        context['sort_by'] = self.request.GET.get('sort', 'random')
+        
+        # Category filtering
         category_slug = self.kwargs.get('category_slug')
         if category_slug:
             context['current_category'] = get_object_or_404(Category, slug=category_slug)

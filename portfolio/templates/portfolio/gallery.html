@@ -12,6 +12,13 @@
     .category-filter:hover .hover-line {
         width: 100%;
     }
+    .sort-option.active {
+        color: #D4AF37;
+        font-weight: 500;
+    }
+    .sort-option:hover .hover-line {
+        width: 100%;
+    }
 </style>
 {% endblock %}
 
@@ -30,9 +37,21 @@
             <p class="max-w-3xl mx-auto mb-8">{{ current_category.description }}</p>
         {% endif %}
         
+        <!-- Search form -->
+        <div class="max-w-lg mx-auto mb-8">
+            <form method="get" class="flex">
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Search by title or location..." 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-photo-accent focus:border-photo-accent">
+                <button type="submit" class="px-4 py-2 bg-photo-accent text-white rounded-r-md hover:bg-opacity-90 transition-all">
+                    Search
+                </button>
+            </form>
+        </div>
+        
         <!-- Category filters -->
         <div class="flex flex-wrap justify-center gap-4 mt-8">
-            <a href="{% url 'portfolio:gallery' %}" class="category-filter relative px-4 py-2 {% if not current_category %}text-photo-accent font-medium{% endif %}">
+            <a href="{% url 'portfolio:gallery' %}{% if search_query %}?search={{ search_query }}{% if sort_by != 'random' %}&sort={{ sort_by }}{% endif %}{% elif sort_by != 'random' %}?sort={{ sort_by }}{% endif %}" 
+               class="category-filter relative px-4 py-2 {% if not current_category %}text-photo-accent font-medium{% endif %}">
                 All
                 {% if not current_category %}
                 <div class="absolute bottom-0 left-0 w-full h-0.5 bg-photo-accent"></div>
@@ -42,7 +61,8 @@
             </a>
             
             {% for category in categories %}
-            <a href="{% url 'portfolio:category_gallery' category.slug %}" class="category-filter relative px-4 py-2 {% if current_category.id == category.id %}text-photo-accent font-medium{% endif %}">
+            <a href="{% url 'portfolio:category_gallery' category.slug %}{% if search_query %}?search={{ search_query }}{% if sort_by != 'random' %}&sort={{ sort_by }}{% endif %}{% elif sort_by != 'random' %}?sort={{ sort_by }}{% endif %}"
+               class="category-filter relative px-4 py-2 {% if current_category.id == category.id %}text-photo-accent font-medium{% endif %}">
                 {{ category.name }}
                 {% if current_category.id == category.id %}
                 <div class="absolute bottom-0 left-0 w-full h-0.5 bg-photo-accent"></div>
@@ -52,6 +72,55 @@
             </a>
             {% endfor %}
         </div>
+        
+        <!-- Sorting options -->
+        <div class="flex flex-wrap justify-center gap-4 mt-4">
+            <span class="text-sm text-gray-500">Sort by:</span>
+            {% url 'portfolio:gallery' as base_url %}
+            {% if current_category %}
+            {% url 'portfolio:category_gallery' current_category.slug as base_url %}
+            {% endif %}
+            
+            <a href="{{ base_url }}{% if search_query %}?search={{ search_query }}{% if sort_by != 'random' %}&sort=random{% endif %}{% else %}?sort=random{% endif %}"
+               class="sort-option relative px-3 py-1 text-sm {% if sort_by == 'random' %}active{% endif %}">
+                Random
+                {% if sort_by == 'random' %}
+                <div class="absolute bottom-0 left-0 w-full h-0.5 bg-photo-accent"></div>
+                {% else %}
+                <div class="hover-line absolute bottom-0 left-0 w-0 h-0.5 bg-photo-accent transition-all duration-300"></div>
+                {% endif %}
+            </a>
+            
+            <a href="{{ base_url }}?{% if search_query %}search={{ search_query }}&{% endif %}sort=date_desc"
+               class="sort-option relative px-3 py-1 text-sm {% if sort_by == 'date_desc' %}active{% endif %}">
+                Newest First
+                {% if sort_by == 'date_desc' %}
+                <div class="absolute bottom-0 left-0 w-full h-0.5 bg-photo-accent"></div>
+                {% else %}
+                <div class="hover-line absolute bottom-0 left-0 w-0 h-0.5 bg-photo-accent transition-all duration-300"></div>
+                {% endif %}
+            </a>
+            
+            <a href="{{ base_url }}?{% if search_query %}search={{ search_query }}&{% endif %}sort=date_asc"
+               class="sort-option relative px-3 py-1 text-sm {% if sort_by == 'date_asc' %}active{% endif %}">
+                Oldest First
+                {% if sort_by == 'date_asc' %}
+                <div class="absolute bottom-0 left-0 w-full h-0.5 bg-photo-accent"></div>
+                {% else %}
+                <div class="hover-line absolute bottom-0 left-0 w-0 h-0.5 bg-photo-accent transition-all duration-300"></div>
+                {% endif %}
+            </a>
+        </div>
+        
+        <!-- Search results indicator -->
+        {% if search_query %}
+        <div class="mt-4 text-sm">
+            <p>
+                Showing results for: <span class="font-medium">{{ search_query }}</span>
+                <a href="{{ base_url }}{% if sort_by != 'random' %}?sort={{ sort_by }}{% endif %}" class="ml-2 text-photo-accent hover:underline">Clear search</a>
+            </p>
+        </div>
+        {% endif %}
     </header>
     
     <!-- Gallery grid -->
@@ -72,17 +141,24 @@
         </div>
         {% empty %}
         <div class="col-span-full py-16 text-center">
-            <p class="text-lg">No photos available in this category yet.</p>
+            <p class="text-lg">
+                {% if search_query %}
+                No photos found matching "{{ search_query }}".
+                {% else %}
+                No photos available in this category yet.
+                {% endif %}
+            </p>
         </div>
         {% endfor %}
     </div>
     
-    <!-- Pagination -->
+    <!-- Pagination (updated to preserve search and sort parameters) -->
     {% if is_paginated %}
     <div class="flex justify-center my-12">
         <div class="inline-flex">
             {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-l-md hover:bg-gray-50">
+            <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by != 'random' %}&sort={{ sort_by }}{% endif %}" 
+               class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-l-md hover:bg-gray-50">
                 Previous
             </a>
             {% endif %}
@@ -93,14 +169,16 @@
                     {{ num }}
                 </span>
                 {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <a href="?page={{ num }}" class="px-4 py-2 border border-gray-300 text-sm font-medium hover:bg-gray-50">
+                <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by != 'random' %}&sort={{ sort_by }}{% endif %}" 
+                   class="px-4 py-2 border border-gray-300 text-sm font-medium hover:bg-gray-50">
                     {{ num }}
                 </a>
                 {% endif %}
             {% endfor %}
             
             {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md hover:bg-gray-50">
+            <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by != 'random' %}&sort={{ sort_by }}{% endif %}" 
+               class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md hover:bg-gray-50">
                 Next
             </a>
             {% endif %}
@@ -111,7 +189,7 @@
 
 {% block extra_js %}
 <script>
-    // Masonry layout
+    // Masonry layout (unchanged)
     document.addEventListener('DOMContentLoaded', function() {
         const grid = document.querySelector('.masonry-grid');
         const items = document.querySelectorAll('.masonry-item');
