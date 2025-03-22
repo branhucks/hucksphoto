@@ -51,8 +51,6 @@ class About(models.Model):
 class Contact(models.Model):
     email = models.EmailField()
     instagram = models.URLField(blank=True)
-    facebook = models.URLField(blank=True)
-    twitter = models.URLField(blank=True)
     
     def __str__(self):
         return "Contact Information"
