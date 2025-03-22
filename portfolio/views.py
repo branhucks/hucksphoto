@@ -96,6 +96,7 @@ class ContactView(TemplateView):
         name = request.POST.get('name', '')
         subject = request.POST.get('subject', '')
         message = request.POST.get('message', '')
+        email = request.POST.get('email', '')
         
         # Validate the form data
         if not name or not subject or not message:
@@ -108,7 +109,7 @@ class ContactView(TemplateView):
         
         try:
             # Format the email message
-            email_message = f"Name: {name}\n\nMessage:\n{message}"
+            email_message = f"Name: {name}\nEmail: {email}\n\n{message}"
             
             # Send the email
             send_mail(
