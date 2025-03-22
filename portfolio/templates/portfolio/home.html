@@ -3,16 +3,34 @@
 {% block title %}Brandon Hucks | Photography{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4">
-    <!-- Hero section -->
-    <section class="min-h-[80vh] flex flex-col items-center justify-center text-center">
-        <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tighter">Brandon Hucks</h1>
-        <p class="text-xl md:text-2xl mb-12 max-w-2xl mx-auto">Enjoyer of taking photos.</p>
-        <a href="{% url 'portfolio:gallery' %}" class="px-8 py-3 bg-photo-dark text-white hover:bg-photo-accent transition-colors duration-300 uppercase tracking-widest text-sm">View Gallery</a>
+    <div class="container mx-auto px-4">
+    <!-- Hero section - adjusted with better arrow spacing -->
+    <section id="hero" class="min-h-screen flex flex-col items-center justify-between text-center relative py-16">
+        <!-- Main content pushed toward top with spacing -->
+        <div><!-- Empty div for spacing --></div>
+        
+        <div class="flex flex-col items-center justify-center">
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tighter">Brandon Hucks</h1>
+            <p class="text-xl md:text-2xl mb-12 max-w-2xl mx-auto">Enjoyer of taking photos.</p>
+            <a href="{% url 'portfolio:gallery' %}" class="px-8 py-3 bg-photo-dark text-white hover:bg-photo-accent transition-colors duration-300 uppercase tracking-widest text-sm">View Gallery</a>
+        </div>
+        
+        <!-- Scroll down arrow - positioned higher from the bottom -->
+        <div class="mb-12 md:mb-16 flex justify-center">
+            <a href="#featured-work" class="scroll-arrow flex flex-col items-center text-photo-dark hover:text-photo-accent transition-colors duration-300 group">
+                <span class="sr-only">Scroll to Featured Work</span>
+                <div class="animate-bounce">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 md:h-10 md:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                </div>
+                <span class="text-xs md:text-sm mt-1 font-medium opacity-80 group-hover:opacity-100">Featured Work</span>
+            </a>
+        </div>
     </section>
     
     <!-- Featured work section -->
-    <section class="py-16">
+    <section id="featured-work" class="pt-20 pb-16">
         <h2 class="text-3xl font-bold mb-12 text-center">Featured Work</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for photo in photos %}
@@ -54,4 +72,27 @@
         </div>
     </section>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle smooth scrolling for the arrow link
+        document.querySelector('.scroll-arrow').addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+            
+            if (targetElement) {
+                // Adjust scroll position to show just the top of the featured section
+                const headerOffset = 20;
+                const elementPosition = targetElement.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+</script>
 {% endblock %}
