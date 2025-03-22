@@ -16,7 +16,7 @@
             
             <div class="flex space-x-4">
                 {% if previous_photo %}
-                <a href="{% url 'portfolio:photo_detail' previous_photo.slug %}" class="flex items-center text-sm hover:text-photo-accent transition-colors duration-300">
+                <a href="{% if current_category %}{% url 'portfolio:category_photo_detail' current_category.slug previous_photo.slug %}{% else %}{% url 'portfolio:photo_detail' previous_photo.slug %}{% endif %}" class="flex items-center text-sm hover:text-photo-accent transition-colors duration-300">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7m0 0l7-7" />
                     </svg>
@@ -25,7 +25,7 @@
                 {% endif %}
                 
                 {% if next_photo %}
-                <a href="{% url 'portfolio:photo_detail' next_photo.slug %}" class="flex items-center text-sm hover:text-photo-accent transition-colors duration-300">
+                <a href="{% if current_category %}{% url 'portfolio:category_photo_detail' current_category.slug next_photo.slug %}{% else %}{% url 'portfolio:photo_detail' next_photo.slug %}{% endif %}" class="flex items-center text-sm hover:text-photo-accent transition-colors duration-300">
                     Next
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

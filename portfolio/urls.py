@@ -10,4 +10,5 @@ urlpatterns = [
     path('photo/<slug:photo_slug>/', views.PhotoDetailView.as_view(), name='photo_detail'),
     path('about/', views.AboutView.as_view(), name='about'),
     path('contact/', views.ContactView.as_view(), name='contact'),
+    path('gallery/<slug:category_slug>/<slug:photo_slug>/', views.PhotoDetailView.as_view(), name='category_photo_detail'),
 ]

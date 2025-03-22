@@ -53,25 +53,50 @@ class PhotoDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        # Get next and previous photos
+        # Get current photo
         current_photo = self.get_object()
         
+        # Get category filter if viewing from a specific category
+        category_slug = self.kwargs.get('category_slug')
+        queryset = Photo.objects.all()
+        
+        if category_slug:
+            category = get_object_or_404(Category, slug=category_slug)
+            queryset = queryset.filter(categories=category)
+        elif current_photo.categories.exists():
+            # If no category specified in URL but photo has categories,
+            # use the first category for navigation context
+            first_category = current_photo.categories.first()
+            queryset = queryset.filter(categories=first_category)
+        
+        # Order by date_taken and then by id to handle same-date photos
+        ordered_photos = queryset.order_by('date_taken', 'id')
+        
+        # Find the index of the current photo
+        photo_ids = list(ordered_photos.values_list('id', flat=True))
+        
         try:
-            next_photo = Photo.objects.filter(
-                date_taken__gte=current_photo.date_taken
-            ).exclude(id=current_photo.id).order_by('date_taken', 'id').first()
-        except Photo.DoesNotExist:
+            current_index = photo_ids.index(current_photo.id)
+            
+            # Get next photo (circular - go to first if at end)
+            next_index = (current_index + 1) % len(photo_ids)
+            next_photo = Photo.objects.get(id=photo_ids[next_index])
+            
+            # Get previous photo (circular - go to last if at beginning)
+            prev_index = (current_index - 1) % len(photo_ids)
+            previous_photo = Photo.objects.get(id=photo_ids[prev_index])
+            
+        except (ValueError, IndexError):
+            # Fallback in case of any errors
             next_photo = None
-            
-        try:
-            previous_photo = Photo.objects.filter(
-                date_taken__lte=current_photo.date_taken
-            ).exclude(id=current_photo.id).order_by('-date_taken', '-id').first()
-        except Photo.DoesNotExist:
             previous_photo = None
-            
+        
         context['next_photo'] = next_photo
         context['previous_photo'] = previous_photo
+        
+        # Pass the category for context and link building in template
+        if category_slug:
+            context['current_category'] = get_object_or_404(Category, slug=category_slug)
         
         return context
 
