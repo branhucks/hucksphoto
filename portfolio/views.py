@@ -1,6 +1,8 @@
-# portfolio/views.py
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, TemplateView
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import Photo, Category, About, Contact
 
 class HomeView(ListView):
@@ -84,6 +86,46 @@ class ContactView(TemplateView):
     template_name = 'portfolio/contact.html'
     
     def get_context_data(self, **kwargs):
+        import os
+        
         context = super().get_context_data(**kwargs)
         context['contact'] = Contact.objects.first()
         return context
+        
+    def post(self, request, *args, **kwargs):
+        name = request.POST.get('name', '')
+        subject = request.POST.get('subject', '')
+        message = request.POST.get('message', '')
+        
+        # Validate the form data
+        if not name or not subject or not message:
+            messages.error(request, "Please fill out all fields.")
+            return redirect('portfolio:contact')
+        
+        # Get the contact information
+        contact = Contact.objects.first()
+        recipient_email = contact.email
+        
+        try:
+            # Format the email message
+            email_message = f"Name: {name}\n\nMessage:\n{message}"
+            
+            # Send the email
+            send_mail(
+                subject=f"Contact Form: {subject}",
+                message=email_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[recipient_email],
+                fail_silently=False,
+            )
+            
+            # Add success message
+            messages.success(request, "Your message has been sent successfully!")
+            
+        except Exception as e:
+            # Add more detailed error message that includes the exception
+            error_message = f"Error: {str(e)}"
+            print(error_message)  # This will appear in your console/logs
+            messages.error(request, "There was an error sending your message. Please try again later.")
+        
+        return redirect('portfolio:contact')

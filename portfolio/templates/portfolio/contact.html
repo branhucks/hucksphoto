@@ -7,6 +7,17 @@
     <div class="py-16 max-w-4xl mx-auto">
         <h1 class="text-4xl font-bold mb-12 text-center">Contact Me</h1>
         
+        <!-- Add message display -->
+        {% if messages %}
+        <div class="mb-8">
+            {% for message in messages %}
+                <div class="p-4 mb-4 {% if message.tags == 'success' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %} rounded">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <div class="flex flex-col lg:flex-row gap-12">
             <!-- Contact information -->
             <div class="lg:w-1/2">
@@ -83,11 +94,6 @@
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
                         <input type="text" name="name" id="name" required class="w-full p-3 border border-gray-300 focus:ring-2 focus:ring-photo-accent focus:border-photo-accent rounded-md shadow-sm">
-                    </div>
-                    
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input type="email" name="email" id="email" required class="w-full p-3 border border-gray-300 focus:ring-2 focus:ring-photo-accent focus:border-photo-accent rounded-md shadow-sm">
                     </div>
                     
                     <div>
