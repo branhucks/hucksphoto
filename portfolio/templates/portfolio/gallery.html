@@ -9,7 +9,6 @@
 
 {% block extra_head %}
 <style>
-    /* Improved category and sort filters with better transitions */
     .category-filter, .sort-option {
         position: relative;
         transition: all 0.3s ease;
@@ -33,7 +32,6 @@
         font-weight: 500;
     }
     
-    /* Waterfall/Pinterest-style grid layout */
     .gallery-container {
         position: relative;
         width: 100%;
@@ -45,7 +43,6 @@
         padding: 0 8px;
     }
     
-    /* Responsive columns */
     @media (min-width: 640px) {
         .gallery-column {
             width: 50%;
@@ -65,8 +62,8 @@
         border-radius: 4px;
         margin-bottom: 16px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        background-color: #f0f0f0; /* Placeholder color */
-        transform: translateZ(0); /* Hardware acceleration */
+        background-color: #f0f0f0;
+        transform: translateZ(0);
     }
     
     .gallery-item img {
@@ -97,7 +94,6 @@
         opacity: 1;
     }
     
-    /* Spinner for loading state */
     .spinner {
         width: 40px;
         height: 40px;
@@ -116,7 +112,6 @@
         to { transform: rotate(360deg); }
     }
     
-    /* Image loading states */
     .lazy-image {
         opacity: 0;
         transition: opacity 0.5s ease;
@@ -126,7 +121,6 @@
         opacity: 1;
     }
     
-    /* Clearfix for the gallery container */
     .gallery-container::after {
         content: "";
         display: table;

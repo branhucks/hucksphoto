@@ -106,25 +106,6 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Related photos (you could implement this in the view) -->
-        {% if related_photos %}
-        <section class="mt-16">
-            <h2 class="text-2xl font-bold mb-6">You might also like</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {% for related in related_photos %}
-                <a href="{% url 'portfolio:photo_detail' related.slug %}" class="block group">
-                    <div class="relative overflow-hidden">
-                        <img src="{{ related.image.url }}" alt="{{ related.title }}" class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                            <h3 class="text-white text-lg font-medium">{{ related.title }}</h3>
-                        </div>
-                    </div>
-                </a>
-                {% endfor %}
-            </div>
-        </section>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

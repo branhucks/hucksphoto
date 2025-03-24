@@ -23,17 +23,9 @@
             },
         }
     </script>
-    <!-- Custom styles -->
     <style>
-        /* For smooth image loading */
         .photo-item {
             transition: opacity 0.5s ease;
-        }
-        .lazy-load {
-            opacity: 0;
-        }
-        .lazy-loaded {
-            opacity: 1;
         }
         /* Gallery masonry grid */
         .masonry-grid {
@@ -121,36 +113,6 @@
         
         mobileMenuButton.addEventListener('click', () => {
             mobileMenu.classList.toggle('hidden');
-        });
-        
-        // Lazy loading images
-        document.addEventListener('DOMContentLoaded', function() {
-            const lazyImages = document.querySelectorAll('.lazy-load');
-            
-            if ('IntersectionObserver' in window) {
-                const imageObserver = new IntersectionObserver((entries, observer) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            const image = entry.target;
-                            image.src = image.dataset.src;
-                            image.classList.remove('lazy-load');
-                            image.classList.add('lazy-loaded');
-                            imageObserver.unobserve(image);
-                        }
-                    });
-                });
-                
-                lazyImages.forEach(image => {
-                    imageObserver.observe(image);
-                });
-            } else {
-                // Fallback for browsers that don't support IntersectionObserver
-                lazyImages.forEach(image => {
-                    image.src = image.dataset.src;
-                    image.classList.remove('lazy-load');
-                    image.classList.add('lazy-loaded');
-                });
-            }
         });
     </script>
     {% block extra_js %}{% endblock %}
