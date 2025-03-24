@@ -300,6 +300,29 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Create the Intersection Observer once
+        let imageObserver;
+        if ('IntersectionObserver' in window) {
+            imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.onload = function() {
+                            img.classList.add('loaded');
+                            const spinnerId = 'spinner-' + img.closest('.gallery-item').dataset.id;
+                            const spinner = document.getElementById(spinnerId);
+                            if (spinner) spinner.style.display = 'none';
+                        };
+                        observer.unobserve(img);
+                    }
+                });
+            }, {
+                rootMargin: '200px 0px',
+                threshold: 0.01
+            });
+        }
+        
         // Waterfall/Pinterest-style layout
         const distributeItems = function() {
             // Get all items from hidden container
@@ -329,6 +352,41 @@
             photoItems.forEach((item, index) => {
                 const columnIndex = index % numberOfColumns;
                 const clonedItem = item.cloneNode(true);
+                const photoId = clonedItem.dataset.id;
+                
+                // Find the lazy-image in the cloned item and prepare it for observation
+                const lazyImage = clonedItem.querySelector('.lazy-image');
+                if (lazyImage) {
+                    // Reset the loaded state
+                    lazyImage.classList.remove('loaded');
+                    
+                    // Make sure the spinner is visible
+                    const spinner = clonedItem.querySelector('.spinner');
+                    if (spinner) spinner.style.display = 'block';
+                    
+                    // Set up the onload event
+                    lazyImage.onload = function() {
+                        this.classList.add('loaded');
+                        const spinner = clonedItem.querySelector('.spinner');
+                        if (spinner) spinner.style.display = 'none';
+                    };
+                    
+                    // Observe the new image if possible
+                    if (imageObserver) {
+                        // If image is already loaded (from a previous view), apply the loaded class
+                        if (lazyImage.complete && lazyImage.src === lazyImage.dataset.src) {
+                            lazyImage.classList.add('loaded');
+                            const spinner = clonedItem.querySelector('.spinner');
+                            if (spinner) spinner.style.display = 'none';
+                        } else {
+                            // Otherwise observe it
+                            imageObserver.observe(lazyImage);
+                        }
+                    } else {
+                        // Fallback for browsers without IntersectionObserver
+                        lazyImage.src = lazyImage.dataset.src;
+                    }
+                }
                 
                 // Add to appropriate column
                 if (columnIndex === 0) {
@@ -348,39 +406,24 @@
         // Initial distribution
         distributeItems();
         
-        // Redistribute on window resize
+        // Redistribute on window resize with debounce for better performance
+        let resizeTimer;
         window.addEventListener('resize', function() {
-            distributeItems();
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                distributeItems();
+            }, 250); // Wait 250ms after resize ends before redistributing
         });
         
-        // Improved lazy loading with Intersection Observer API
-        const lazyImages = document.querySelectorAll('.lazy-image');
-        
-        if ('IntersectionObserver' in window) {
-            const imageObserver = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const img = entry.target;
-                        img.src = img.dataset.src;
-                        imageObserver.unobserve(img);
-                    }
-                });
-            }, {
-                rootMargin: '200px 0px', // Start loading images before they enter viewport
-                threshold: 0.01
-            });
-            
-            lazyImages.forEach(image => {
-                imageObserver.observe(image);
-            });
-        } else {
-            // Fallback for browsers that don't support IntersectionObserver
+        // Fallback for browsers that don't support IntersectionObserver
+        if (!('IntersectionObserver' in window)) {
+            const lazyImages = document.querySelectorAll('.gallery-column .lazy-image');
             lazyImages.forEach(image => {
                 image.src = image.dataset.src;
                 image.classList.add('loaded');
-                const spinnerId = image.getAttribute('id');
-                if (spinnerId) {
-                    const spinner = document.getElementById('spinner-' + spinnerId);
+                const galleryItem = image.closest('.gallery-item');
+                if (galleryItem) {
+                    const spinner = galleryItem.querySelector('.spinner');
                     if (spinner) spinner.style.display = 'none';
                 }
             });

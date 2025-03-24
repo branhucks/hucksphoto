@@ -6,16 +6,17 @@
     <div class="container mx-auto px-4">
     <!-- Hero section - adjusted with better arrow spacing -->
     <section id="hero" class="min-h-screen flex flex-col items-center justify-between text-center relative py-16">
-        <!-- Main content pushed toward top with spacing -->
-        <div><!-- Empty div for spacing --></div>
+        <!-- Top spacer that maintains layout but doesn't take too much space on mobile -->
+        <div><!-- Empty spacer div --></div>
         
-        <div class="flex flex-col items-center justify-center">
+        <!-- Center content with auto margins to ensure vertical centering -->
+        <div class="flex flex-col items-center justify-center my-auto">
             <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tighter">Brandon Hucks</h1>
             <p class="text-xl md:text-2xl mb-12 max-w-2xl mx-auto">Enjoyer of taking photos.</p>
             <a href="{% url 'portfolio:gallery' %}" class="px-8 py-3 bg-photo-dark text-white hover:bg-photo-accent transition-colors duration-300 uppercase tracking-widest text-sm">View Gallery</a>
         </div>
         
-        <!-- Scroll down arrow - positioned higher from the bottom -->
+        <!-- Scroll arrow maintained at bottom -->
         <div class="mb-12 md:mb-16 flex justify-center">
             <a href="#featured-work" class="scroll-arrow flex flex-col items-center text-photo-dark hover:text-photo-accent transition-colors duration-300 group">
                 <span class="sr-only">Scroll to Featured Work</span>
