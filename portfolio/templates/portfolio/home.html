@@ -54,18 +54,18 @@
         </div>
     </section>
     
-    <!-- Categories section -->
-    <section class="py-16 bg-photo-dark text-white">
-        <div class="max-w-4xl mx-auto">
-            <h2 class="text-3xl font-bold mb-12 text-center">Explore Categories</h2>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <!-- Categories section with improved responsiveness -->
+    <section class="py-12 sm:py-16 bg-photo-dark text-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-2xl sm:text-3xl font-bold mb-8 sm:mb-12 text-center">Explore Categories</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 max-w-6xl mx-auto">
                 {% for category in categories %}
-                <a href="{% url 'portfolio:category_gallery' category.slug %}" class="block p-6 border border-white/20 hover:border-photo-accent hover:bg-black/30 transition-all duration-300 text-center">
-                    <h3 class="text-xl font-semibold">{{ category.name }}</h3>
-                    <p class="mt-2 text-white/70">{{ category.description|truncatechars:60 }}</p>
+                <a href="{% url 'portfolio:category_gallery' category.slug %}" class="block p-4 sm:p-6 border border-white/20 hover:border-photo-accent hover:bg-black/30 transition-all duration-300 text-center h-full flex flex-col justify-between">
+                    <h3 class="text-lg sm:text-xl font-semibold">{{ category.name }}</h3>
+                    <p class="mt-2 text-white/70 text-sm sm:text-base">{{ category.description|truncatechars:60 }}</p>
                 </a>
                 {% empty %}
-                <div class="col-span-full text-center py-8">
+                <div class="col-span-full text-center py-6 sm:py-8">
                     <p>No categories available yet.</p>
                 </div>
                 {% endfor %}
