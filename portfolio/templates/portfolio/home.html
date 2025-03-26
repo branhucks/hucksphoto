@@ -35,7 +35,13 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {% for photo in photos %}
             <div class="group relative overflow-hidden aspect-square">
-                <img src="{{ photo.image.url }}" alt="{{ photo.title }}" class="object-cover w-full h-full transform transition-transform duration-500 group-hover:scale-105">
+                <img 
+                    src="{{ photo.image_thumbnail.url }}" 
+                    data-src="{{ photo.image_webp.url }}" 
+                    alt="{{ photo.title }}" 
+                    loading="lazy"
+                    class="lazy-image object-cover w-full h-full transform transition-transform duration-500 group-hover:scale-105"
+                >
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                     <h3 class="text-white text-xl font-bold">{{ photo.title }}</h3>
                     <p class="text-white/80 mt-2">{{ photo.description|truncatechars:100 }}</p>
@@ -53,7 +59,7 @@
         </div>
     </section>
     
-    <!-- Categories section -->
+    <!-- Categories section remains the same -->
     <section class="py-12 sm:py-16 bg-photo-dark text-white">
         <div class="container mx-auto px-4">
             <h2 class="text-2xl sm:text-3xl font-bold mb-8 sm:mb-12 text-center">Explore Categories</h2>
@@ -75,14 +81,13 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Handle smooth scrolling for the arrow link
+        // Smooth scrolling for arrow link
         document.querySelector('.scroll-arrow').addEventListener('click', function(e) {
             e.preventDefault();
             const targetId = this.getAttribute('href');
             const targetElement = document.querySelector(targetId);
             
             if (targetElement) {
-                // Adjust scroll position to show just the top of the featured section
                 const headerOffset = 20;
                 const elementPosition = targetElement.getBoundingClientRect().top;
                 const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
@@ -93,6 +98,29 @@
                 });
             }
         });
+
+        // Lazy load images
+        const lazyImages = document.querySelectorAll('.lazy-image');
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const image = entry.target;
+                    const fullSrc = image.dataset.src;
+                    
+                    if (fullSrc) {
+                        image.src = fullSrc;
+                        image.removeAttribute('data-src');
+                    }
+                    
+                    image.classList.remove('lazy-image');
+                    observer.unobserve(image);
+                }
+            });
+        }, {
+            rootMargin: '50px 0px'
+        });
+
+        lazyImages.forEach(img => imageObserver.observe(img));
     });
 </script>
 {% endblock %}

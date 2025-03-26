@@ -6,6 +6,7 @@ from django.conf import settings
 from django.db.models import Q
 from .models import Photo, Category, About, Contact
 from .forms import ContactForm
+from django.db.models import Prefetch
 
 class HomeView(ListView):
     model = Photo
@@ -13,11 +14,15 @@ class HomeView(ListView):
     context_object_name = 'photos'
     
     def get_queryset(self):
-        return Photo.objects.filter(featured=True)[:9]
+        # Optimize query with select_related and prefetch_related
+        return Photo.objects.filter(featured=True).prefetch_related('categories')[:9]
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['categories'] = Category.objects.all()
+        
+        # Optimize category query
+        context['categories'] = Category.objects.only('name', 'description', 'slug')
+        
         return context
 
 class GalleryView(ListView):
