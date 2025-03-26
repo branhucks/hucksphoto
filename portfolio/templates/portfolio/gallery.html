@@ -138,7 +138,7 @@
             {% if current_category %}
                 {{ current_category.name }}
             {% else %}
-                Photography Gallery
+                Gallery
             {% endif %}
         </h1>
         {% if current_category %}
@@ -293,135 +293,140 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Create the Intersection Observer once
-        let imageObserver;
-        if ('IntersectionObserver' in window) {
-            imageObserver = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const img = entry.target;
-                        img.src = img.dataset.src;
-                        img.onload = function() {
-                            img.classList.add('loaded');
-                            const spinnerId = 'spinner-' + img.closest('.gallery-item').dataset.id;
-                            const spinner = document.getElementById(spinnerId);
-                            if (spinner) spinner.style.display = 'none';
-                        };
-                        observer.unobserve(img);
+document.addEventListener('DOMContentLoaded', function() {
+    // Create the Intersection Observer once
+    let imageObserver;
+    if ('IntersectionObserver' in window) {
+        imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const fullSrc = img.dataset.src;
+                    
+                    if (fullSrc) {
+                        img.src = fullSrc;
+                        img.removeAttribute('data-src');
                     }
-                });
-            }, {
-                rootMargin: '200px 0px',
-                threshold: 0.01
+                    
+                    img.classList.add('loaded');
+                    const spinnerId = 'spinner-' + img.closest('.gallery-item').dataset.id;
+                    const spinner = document.getElementById(spinnerId);
+                    if (spinner) spinner.style.display = 'none';
+                    
+                    observer.unobserve(img);
+                }
             });
+        }, {
+            rootMargin: '200px 0px',
+            threshold: 0.01
+        });
+    }
+    
+    // Waterfall/Pinterest-style layout
+    const distributeItems = function() {
+        // Get all items from hidden container
+        const photoItems = document.querySelectorAll('#photo-items .gallery-item');
+        
+        // Get columns
+        const column1 = document.getElementById('column1');
+        const column2 = document.getElementById('column2');
+        const column3 = document.getElementById('column3');
+        
+        // Clear columns
+        column1.innerHTML = '';
+        column2.innerHTML = '';
+        column3.innerHTML = '';
+        
+        // Determine number of columns based on screen width
+        const screenWidth = window.innerWidth;
+        let numberOfColumns = 3;
+        
+        if (screenWidth < 640) {
+            numberOfColumns = 1;
+        } else if (screenWidth < 992) {
+            numberOfColumns = 2;
         }
         
-        // Waterfall/Pinterest-style layout
-        const distributeItems = function() {
-            // Get all items from hidden container
-            const photoItems = document.querySelectorAll('#photo-items .gallery-item');
+        // Distribute items to columns evenly
+        photoItems.forEach((item, index) => {
+            const columnIndex = index % numberOfColumns;
+            const clonedItem = item.cloneNode(true);
+            const photoId = clonedItem.dataset.id;
             
-            // Get columns
-            const column1 = document.getElementById('column1');
-            const column2 = document.getElementById('column2');
-            const column3 = document.getElementById('column3');
-            
-            // Clear columns
-            column1.innerHTML = '';
-            column2.innerHTML = '';
-            column3.innerHTML = '';
-            
-            // Determine number of columns based on screen width
-            const screenWidth = window.innerWidth;
-            let numberOfColumns = 3;
-            
-            if (screenWidth < 640) {
-                numberOfColumns = 1;
-            } else if (screenWidth < 992) {
-                numberOfColumns = 2;
-            }
-            
-            // Distribute items to columns evenly
-            photoItems.forEach((item, index) => {
-                const columnIndex = index % numberOfColumns;
-                const clonedItem = item.cloneNode(true);
-                const photoId = clonedItem.dataset.id;
+            // Find the lazy-image in the cloned item and prepare it for observation
+            const lazyImage = clonedItem.querySelector('.lazy-image');
+            if (lazyImage) {
+                // Reset the loaded state
+                lazyImage.classList.remove('loaded');
                 
-                // Find the lazy-image in the cloned item and prepare it for observation
-                const lazyImage = clonedItem.querySelector('.lazy-image');
-                if (lazyImage) {
-                    // Reset the loaded state
-                    lazyImage.classList.remove('loaded');
-                    
-                    // Make sure the spinner is visible
+                // Make sure the spinner is visible
+                const spinner = clonedItem.querySelector('.spinner');
+                if (spinner) spinner.style.display = 'block';
+                
+                // Set up the onload event
+                lazyImage.onload = function() {
+                    this.classList.add('loaded');
                     const spinner = clonedItem.querySelector('.spinner');
-                    if (spinner) spinner.style.display = 'block';
-                    
-                    // Set up the onload event
-                    lazyImage.onload = function() {
-                        this.classList.add('loaded');
+                    if (spinner) spinner.style.display = 'none';
+                };
+                
+                // Observe the new image if possible
+                if (imageObserver) {
+                    // If image is already loaded (from a previous view), apply the loaded class
+                    if (lazyImage.complete && lazyImage.src === lazyImage.dataset.src) {
+                        lazyImage.classList.add('loaded');
                         const spinner = clonedItem.querySelector('.spinner');
                         if (spinner) spinner.style.display = 'none';
-                    };
-                    
-                    // Observe the new image if possible
-                    if (imageObserver) {
-                        // If image is already loaded (from a previous view), apply the loaded class
-                        if (lazyImage.complete && lazyImage.src === lazyImage.dataset.src) {
-                            lazyImage.classList.add('loaded');
-                            const spinner = clonedItem.querySelector('.spinner');
-                            if (spinner) spinner.style.display = 'none';
-                        } else {
-                            // Otherwise observe it
-                            imageObserver.observe(lazyImage);
-                        }
                     } else {
-                        // Fallback for browsers without IntersectionObserver
-                        lazyImage.src = lazyImage.dataset.src;
+                        // Otherwise observe it
+                        imageObserver.observe(lazyImage);
                     }
-                }
-                
-                // Add to appropriate column
-                if (columnIndex === 0) {
-                    column1.appendChild(clonedItem);
-                } else if (columnIndex === 1) {
-                    column2.appendChild(clonedItem);
                 } else {
-                    column3.appendChild(clonedItem);
+                    // Fallback for browsers without IntersectionObserver
+                    lazyImage.src = lazyImage.dataset.src;
                 }
-            });
+            }
             
-            // Handle column visibility based on screen size
-            column2.style.display = numberOfColumns >= 2 ? 'block' : 'none';
-            column3.style.display = numberOfColumns >= 3 ? 'block' : 'none';
-        };
-        
-        // Initial distribution
-        distributeItems();
-        
-        // Redistribute on window resize with debounce for better performance
-        let resizeTimer;
-        window.addEventListener('resize', function() {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(function() {
-                distributeItems();
-            }, 250); // Wait 250ms after resize ends before redistributing
+            // Add to appropriate column
+            if (columnIndex === 0) {
+                column1.appendChild(clonedItem);
+            } else if (columnIndex === 1) {
+                column2.appendChild(clonedItem);
+            } else {
+                column3.appendChild(clonedItem);
+            }
         });
         
-        // Fallback for browsers that don't support IntersectionObserver
-        if (!('IntersectionObserver' in window)) {
-            const lazyImages = document.querySelectorAll('.gallery-column .lazy-image');
-            lazyImages.forEach(image => {
-                image.src = image.dataset.src;
-                image.classList.add('loaded');
-                const galleryItem = image.closest('.gallery-item');
-                if (galleryItem) {
-                    const spinner = galleryItem.querySelector('.spinner');
-                    if (spinner) spinner.style.display = 'none';
-                }
-            });
-        }
+        // Handle column visibility based on screen size
+        column2.style.display = numberOfColumns >= 2 ? 'block' : 'none';
+        column3.style.display = numberOfColumns >= 3 ? 'block' : 'none';
+    };
+    
+    // Initial distribution
+    distributeItems();
+    
+    // Redistribute on window resize with debounce for better performance
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            distributeItems();
+        }, 250); // Wait 250ms after resize ends before redistributing
     });
+    
+    // Fallback for browsers that don't support IntersectionObserver
+    if (!('IntersectionObserver' in window)) {
+        const lazyImages = document.querySelectorAll('.gallery-column .lazy-image');
+        lazyImages.forEach(image => {
+            image.src = image.dataset.src;
+            image.classList.add('loaded');
+            const galleryItem = image.closest('.gallery-item');
+            if (galleryItem) {
+                const spinner = galleryItem.querySelector('.spinner');
+                if (spinner) spinner.style.display = 'none';
+            }
+        });
+    }
+});
 </script>
 {% endblock %}
