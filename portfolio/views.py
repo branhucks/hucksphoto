@@ -7,6 +7,10 @@ from django.db.models import Q
 from .models import Photo, Category, About, Contact
 from .forms import ContactForm
 from django.db.models import Prefetch
+from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+import random
 
 class HomeView(ListView):
     model = Photo
@@ -14,13 +18,12 @@ class HomeView(ListView):
     context_object_name = 'photos'
     
     def get_queryset(self):
-        # Optimize query with select_related and prefetch_related
-        return Photo.objects.filter(featured=True).prefetch_related('categories')[:9]
+        # Optimize query with select_related and better prefetch
+        return Photo.objects.filter(featured=True).select_related().prefetch_related('categories')[:9]
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        # Optimize category query
         context['categories'] = Category.objects.only('name', 'description', 'slug')
         
         return context
@@ -29,17 +32,18 @@ class GalleryView(ListView):
     model = Photo
     template_name = 'portfolio/gallery.html'
     context_object_name = 'photos'
-    paginate_by = 12
+    paginate_by = 24
     
     def get_queryset(self):
-        # Start with base queryset
-        queryset = Photo.objects.all()
+        # Start with optimized base queryset
+        queryset = Photo.objects.all().only(
+            'id', 'title', 'slug', 'location', 'image', 'image_thumbnail', 'image_webp'
+        )
         
         # Apply category filter if specified
         category_slug = self.kwargs.get('category_slug')
         if category_slug:
-            category = get_object_or_404(Category, slug=category_slug)
-            queryset = queryset.filter(categories=category)
+            queryset = queryset.filter(categories__slug=category_slug)
         
         # Apply search filter if provided
         search_query = self.request.GET.get('search', '')
@@ -49,20 +53,38 @@ class GalleryView(ListView):
                 Q(location__icontains=search_query)
             )
         
-        # Apply sorting
+        # Apply sorting with optimized queries
         sort_by = self.request.GET.get('sort', 'random')
         if sort_by == 'date_asc':
-            queryset = queryset.order_by('date_taken')
+            queryset = queryset.order_by('date_taken', 'id')
         elif sort_by == 'date_desc':
-            queryset = queryset.order_by('-date_taken')
+            queryset = queryset.order_by('-date_taken', '-id')
         elif sort_by == 'random':
-            queryset = queryset.order_by('?')
+
+            if queryset.count() > 100:
+                # For large sets, pick a random offset instead of full randomization
+                count = queryset.count()
+                queryset = queryset.order_by('id')  # Order by ID for consistent paging
+                
+                paginator = Paginator(queryset, self.paginate_by)
+                max_page = paginator.num_pages
+                
+                if max_page > 1:
+                    session_key = f"random_seed_{category_slug or 'all'}"
+                    if session_key not in self.request.session:
+                        self.request.session[session_key] = random.randint(1, max_page)
+                    
+                    random_page = self.request.session[session_key]
+                    queryset = paginator.get_page(random_page).object_list
+            else:
+                queryset = queryset.order_by('?')
             
         return queryset
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['categories'] = Category.objects.all()
+        # Optimize category query
+        context['categories'] = Category.objects.only('id', 'name', 'slug')
         
         # Pass the search query to the template for form persistence
         context['search_query'] = self.request.GET.get('search', '')
@@ -70,12 +92,76 @@ class GalleryView(ListView):
         # Pass the current sort option to the template
         context['sort_by'] = self.request.GET.get('sort', 'random')
         
-        # Category filtering
+        # Category filtering with optimized query
         category_slug = self.kwargs.get('category_slug')
         if category_slug:
-            context['current_category'] = get_object_or_404(Category, slug=category_slug)
+            context['current_category'] = get_object_or_404(
+                Category.objects.only('id', 'name', 'description', 'slug'),
+                slug=category_slug
+            )
             
         return context
+
+@require_GET
+def load_more_photos(request):
+    page = request.GET.get('page', 1)
+    category_slug = request.GET.get('category', None)
+    sort_by = request.GET.get('sort', 'random')
+    search_query = request.GET.get('search', '')
+    
+    # Start with base queryset
+    queryset = Photo.objects.all().only(
+        'id', 'title', 'slug', 'location', 'image', 'image_thumbnail', 'image_webp'
+    )
+    
+    # Apply filters similar to GalleryView
+    if category_slug:
+        queryset = queryset.filter(categories__slug=category_slug)
+    
+    if search_query:
+        queryset = queryset.filter(
+            Q(title__icontains=search_query) | 
+            Q(location__icontains=search_query)
+        )
+    
+    # Apply sorting
+    if sort_by == 'date_asc':
+        queryset = queryset.order_by('date_taken', 'id')
+    elif sort_by == 'date_desc':
+        queryset = queryset.order_by('-date_taken', '-id')
+    elif sort_by == 'random':
+
+        if 'random_seed' in request.session:
+            # Apply the same seed for ordering
+            random.seed(request.session['random_seed'])
+            queryset = list(queryset)
+            random.shuffle(queryset)
+        else:
+            queryset = queryset.order_by('?')
+    
+    # Set up pagination
+    paginator = Paginator(queryset, 24)
+    photos = paginator.get_page(page)
+    
+    # Format data for JSON response
+    data = []
+    for photo in photos:
+        data.append({
+            'id': photo.id,
+            'title': photo.title,
+            'slug': photo.slug,
+            'location': photo.location,
+            'image_url': photo.image.url,
+            'thumbnail_url': photo.image_thumbnail.url if photo.image_thumbnail else '',
+            'webp_url': photo.image_webp.url if photo.image_webp else '',
+            'detail_url': f"/photo/{photo.slug}/"
+        })
+    
+    return JsonResponse({
+        'photos': data,
+        'has_next': photos.has_next(),
+        'next_page': photos.next_page_number() if photos.has_next() else None
+    })
 
 class PhotoDetailView(DetailView):
     model = Photo
