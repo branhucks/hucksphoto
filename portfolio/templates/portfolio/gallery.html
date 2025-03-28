@@ -137,7 +137,6 @@ Gallery | Brandon Hucks
         clear: both;
     }
 
-    /* Add low-quality image placeholder style */
     .lqip {
         filter: blur(10px);
         transform: scale(1.05);
@@ -153,7 +152,6 @@ Gallery | Brandon Hucks
 {% endblock %}
 
 {% block content %}
-<!-- Rest of content header section remains unchanged -->
 <div class="container mx-auto px-4 max-w-6xl">
     <!-- Gallery header -->
     <header class="py-10">
@@ -209,7 +207,7 @@ Gallery | Brandon Hucks
                 {% url 'portfolio:category_gallery' current_category.slug as base_url %}
                 {% endif %}
 
-                <a href="{{ base_url }}{% if search_query %}?search={{ search_query }}{% if sort_by != 'random' %}&sort=random{% endif %}{% else %}?sort=random{% endif %}"
+                <a href="{{ base_url }}?{% if search_query %}search={{ search_query }}&{% endif %}sort=random&new_seed=1"
                     class="sort-option px-2 py-1 {% if sort_by == 'random' %}active{% endif %}">
                     Random
                 </a>
@@ -238,10 +236,9 @@ Gallery | Brandon Hucks
         {% endif %}
     </header>
 
-    <!-- Modified Waterfall/Pinterest-style gallery with improved loading -->
+    <!-- Waterfall/Pinterest-style gallery -->
     {% if photos %}
     <div class="gallery-container" id="gallery-container">
-        <!-- Columns will be filled by JavaScript -->
         <div class="gallery-column" id="column1"></div>
         <div class="gallery-column" id="column2"></div>
         <div class="gallery-column" id="column3"></div>
@@ -279,7 +276,6 @@ Gallery | Brandon Hucks
         {% endfor %}
     </div>
 
-    <!-- Pagination section unchanged -->
     {% if is_paginated %}
     <div class="flex justify-center my-12">
         <div class="inline-flex">
@@ -318,8 +314,6 @@ Gallery | Brandon Hucks
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Optimize gallery layout and image loading
-
         // Create the Intersection Observer once and with better options
         let imageObserver;
         if ('IntersectionObserver' in window) {

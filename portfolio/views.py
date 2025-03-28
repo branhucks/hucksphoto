@@ -55,29 +55,31 @@ class GalleryView(ListView):
         
         # Apply sorting with optimized queries
         sort_by = self.request.GET.get('sort', 'random')
+        
         if sort_by == 'date_asc':
             queryset = queryset.order_by('date_taken', 'id')
         elif sort_by == 'date_desc':
             queryset = queryset.order_by('-date_taken', '-id')
         elif sort_by == 'random':
-
-            if queryset.count() > 100:
-                # For large sets, pick a random offset instead of full randomization
-                count = queryset.count()
-                queryset = queryset.order_by('id')  # Order by ID for consistent paging
+            # Create a consistent session key for this specific gallery view
+            filter_key = f"{category_slug or 'all'}_{search_query}"
+            session_key = f"random_seed_{filter_key}"
+            
+            # Check if we need a new random seed
+            new_seed_requested = self.request.GET.get('new_seed') == '1'
+            if new_seed_requested or session_key not in self.request.session:
+                # Generate a new random seed and store it in the session
+                self.request.session[session_key] = random.randint(1, 1000000)
                 
-                paginator = Paginator(queryset, self.paginate_by)
-                max_page = paginator.num_pages
-                
-                if max_page > 1:
-                    session_key = f"random_seed_{category_slug or 'all'}"
-                    if session_key not in self.request.session:
-                        self.request.session[session_key] = random.randint(1, max_page)
-                    
-                    random_page = self.request.session[session_key]
-                    queryset = paginator.get_page(random_page).object_list
-            else:
-                queryset = queryset.order_by('?')
+            # Use the consistent seed for random ordering
+            random.seed(self.request.session[session_key])
+            
+            # Convert queryset to list and shuffle with our seeded random
+            photo_list = list(queryset)
+            random.shuffle(photo_list)
+            
+            # Return the shuffled list directly - Django's Paginator can handle lists
+            return photo_list
             
         return queryset
     
@@ -130,13 +132,19 @@ def load_more_photos(request):
     elif sort_by == 'date_desc':
         queryset = queryset.order_by('-date_taken', '-id')
     elif sort_by == 'random':
-
-        if 'random_seed' in request.session:
-            # Apply the same seed for ordering
-            random.seed(request.session['random_seed'])
-            queryset = list(queryset)
-            random.shuffle(queryset)
+        filter_key = f"{category_slug or 'all'}_{search_query}"
+        session_key = f"random_seed_{filter_key}"
+        
+        if session_key in request.session:
+            # Use the same seed as the main gallery view
+            random.seed(request.session[session_key])
+            
+            # Convert to list and shuffle with the same seed
+            photo_list = list(queryset)
+            random.shuffle(photo_list)
+            queryset = photo_list
         else:
+            # Fallback to database random if no seed (shouldn't happen normally)
             queryset = queryset.order_by('?')
     
     # Set up pagination
@@ -146,16 +154,30 @@ def load_more_photos(request):
     # Format data for JSON response
     data = []
     for photo in photos:
-        data.append({
-            'id': photo.id,
-            'title': photo.title,
-            'slug': photo.slug,
-            'location': photo.location,
-            'image_url': photo.image.url,
-            'thumbnail_url': photo.image_thumbnail.url if photo.image_thumbnail else '',
-            'webp_url': photo.image_webp.url if photo.image_webp else '',
-            'detail_url': f"/photo/{photo.slug}/"
-        })
+        # Handle both model instances and dictionaries (when using shuffled list)
+        if isinstance(photo, dict):
+            photo_data = {
+                'id': photo['id'],
+                'title': photo['title'],
+                'slug': photo['slug'],
+                'location': photo['location'],
+                'image_url': photo['image'].url,
+                'thumbnail_url': photo['image_thumbnail'].url if photo['image_thumbnail'] else '',
+                'webp_url': photo['image_webp'].url if photo['image_webp'] else '',
+                'detail_url': f"/photo/{photo['slug']}/"
+            }
+        else:
+            photo_data = {
+                'id': photo.id,
+                'title': photo.title,
+                'slug': photo.slug,
+                'location': photo.location,
+                'image_url': photo.image.url,
+                'thumbnail_url': photo.image_thumbnail.url if photo.image_thumbnail else '',
+                'webp_url': photo.image_webp.url if photo.image_webp else '',
+                'detail_url': f"/photo/{photo.slug}/"
+            }
+        data.append(photo_data)
     
     return JsonResponse({
         'photos': data,
