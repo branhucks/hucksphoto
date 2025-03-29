@@ -3,153 +3,156 @@
 {% block title %}{{ photo.title }} | Brandon Hucks{% endblock %}
 
 {% block extra_head %}
+<!-- Preload adjacent images -->
 {% if next_photo_url %}
-<link rel="preload" href="{{ next_photo_url }}" as="image">
+<link rel="preload" href="{{ next_photo_url }}" as="image" fetchpriority="high">
 {% endif %}
 {% if previous_photo_url %}
-<link rel="preload" href="{{ previous_photo_url }}" as="image">
+<link rel="preload" href="{{ previous_photo_url }}" as="image" fetchpriority="high">
 {% endif %}
 {% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4">
-    <div class="py-8">
-        <!-- Navigation links -->
-        <div class="flex justify-between items-center mb-4">
-            <a href="{% url 'portfolio:gallery' %}"
-                class="flex items-center text-sm hover:text-photo-accent transition-colors duration-300">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <!-- Top Navigation Bar -->
+    <nav class="flex justify-between items-center mb-6">
+        <a href="{% url 'portfolio:gallery' %}"
+            class="group flex items-center text-sm font-medium hover:text-photo-accent transition duration-200">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 mr-2 transform group-hover:-translate-x-1 transition duration-200" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Gallery
+        </a>
+
+        <!-- Next/Previous Navigation -->
+        <div class="flex space-x-4">
+            {% if previous_photo %}
+            <a href="{% if current_category %}{% url 'portfolio:category_photo_detail' current_category.slug previous_photo.slug %}{% else %}{% url 'portfolio:photo_detail' previous_photo.slug %}{% endif %}"
+                class="flex items-center text-sm font-medium hover:text-photo-accent transition duration-200">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7m0 0l7-7" />
                 </svg>
-                Back to Gallery
+                Previous
             </a>
+            {% endif %}
 
-            <div class="flex space-x-4">
-                {% if previous_photo %}
-                <a href="{% if current_category %}{% url 'portfolio:category_photo_detail' current_category.slug previous_photo.slug %}{% else %}{% url 'portfolio:photo_detail' previous_photo.slug %}{% endif %}"
-                    class="flex items-center text-sm hover:text-photo-accent transition-colors duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7m0 0l7-7" />
-                    </svg>
-                    Previous
-                </a>
-                {% endif %}
-
-                {% if next_photo %}
-                <a href="{% if current_category %}{% url 'portfolio:category_photo_detail' current_category.slug next_photo.slug %}{% else %}{% url 'portfolio:photo_detail' next_photo.slug %}{% endif %}"
-                    class="flex items-center text-sm hover:text-photo-accent transition-colors duration-300">
-                    Next
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                </a>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Photo title for mobile -->
-        <div class="block md:hidden mb-4">
-            <h1 class="text-2xl font-bold">{{ photo.title }}</h1>
-
-            {% if photo.categories.all %}
-            <div class="mt-2 flex flex-wrap gap-2">
-                {% for category in photo.categories.all %}
-                <a href="{% url 'portfolio:category_gallery' category.slug %}"
-                    class="text-xs px-3 py-1 bg-gray-100 hover:bg-photo-accent hover:text-white transition-colors duration-300">
-                    {{ category.name }}
-                </a>
-                {% endfor %}
-            </div>
+            {% if next_photo %}
+            <a href="{% if current_category %}{% url 'portfolio:category_photo_detail' current_category.slug next_photo.slug %}{% else %}{% url 'portfolio:photo_detail' next_photo.slug %}{% endif %}"
+                class="flex items-center text-sm font-medium hover:text-photo-accent transition duration-200">
+                Next
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
             {% endif %}
         </div>
+    </nav>
 
-        <!-- Restructured content layout -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Photo container with responsive handling for both landscape and portrait -->
-            <div class="lg:col-span-8 lg:col-start-1">
-                <div class="bg-photo-dark p-2">
-                    <div class="flex justify-center items-center">
-                        <img src="{{ photo.image.url }}" alt="{{ photo.title }}"
-                            class="max-w-full h-auto max-h-[75vh] object-contain" loading="lazy">
-                    </div>
-                </div>
+    <!-- Main content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Photo container -->
+        <div class="lg:col-span-2 bg-white rounded-lg overflow-hidden shadow-lg">
+            <div class="relative flex justify-center items-center py-4 px-2">
+                <!-- Main image -->
+                <img src="{{ photo.image.url }}" alt="{{ photo.title }}"
+                    class="max-w-full rounded-lg max-h-[70vh] w-auto h-auto object-contain" loading="eager" fetchpriority="high" width="{{ photo.image.width }}" height="{{ photo.image.height }}">
             </div>
+        </div>
 
-            <!-- Photo information -->
-            <div class="lg:col-span-4 space-y-4">
-                <!-- Title only visible on desktop -->
-                <div class="hidden md:block">
-                    <h1 class="text-2xl font-bold">{{ photo.title }}</h1>
+        <!-- Photo information sidebar -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-md p-6 h-full">
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ photo.title }}</h1>
 
-                    {% if photo.categories.all %}
-                    <div class="mt-3 flex flex-wrap gap-2">
-                        {% for category in photo.categories.all %}
-                        <a href="{% url 'portfolio:category_gallery' category.slug %}"
-                            class="text-xs px-3 py-1 bg-gray-100 hover:bg-photo-accent hover:text-white transition-colors duration-300">
-                            {{ category.name }}
-                        </a>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-
-                {% if photo.description %}
-                <div>
-                    <h2 class="text-lg font-medium mb-2">About this photo</h2>
-                    <p class="text-gray-700">{{ photo.description|linebreaks }}</p>
+                <!-- Categories pills directly under title -->
+                {% if photo.categories.all %}
+                <div class="flex flex-wrap gap-2 mb-4">
+                    {% for category in photo.categories.all %}
+                    <a href="{% url 'portfolio:category_gallery' category.slug %}"
+                        class="text-xs px-3 py-1 rounded-full bg-gray-100 hover:bg-photo-accent hover:text-white transition duration-200">
+                        {{ category.name }}
+                    </a>
+                    {% endfor %}
                 </div>
                 {% endif %}
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
+                {% if photo.description %}
+                <div class="mb-6 border-b border-gray-200 pb-6">
+                    <h2 class="text-lg font-medium text-gray-800 mb-3">About this photo</h2>
+                    <p class="text-gray-700 leading-relaxed">{{ photo.description|linebreaks }}</p>
+                </div>
+                {% endif %}
+
+                <div class="space-y-4">
                     {% if photo.date_taken %}
                     <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500 flex-shrink-0"
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span>{{ photo.date_taken|date:"F j, Y" }}</span>
+                        <div class="bg-gray-100 p-2 rounded-full mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-photo-accent" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Date Taken</p>
+                            <p class="font-medium">{{ photo.date_taken|date:"F j, Y" }}</p>
+                        </div>
                     </div>
                     {% endif %}
 
                     {% if photo.location %}
                     <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500 flex-shrink-0"
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span>{{ photo.location }}</span>
+                        <div class="bg-gray-100 p-2 rounded-full mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-photo-accent" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Location</p>
+                            <p class="font-medium">{{ photo.location }}</p>
+                        </div>
                     </div>
                     {% endif %}
 
                     {% if photo.camera %}
                     <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500 flex-shrink-0"
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 9a2 2 0 012-2h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span>{{ photo.camera }}</span>
+                        <div class="bg-gray-100 p-2 rounded-full mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-photo-accent" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 9a2 2 0 012-2h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Camera</p>
+                            <p class="font-medium">{{ photo.camera }}</p>
+                        </div>
                     </div>
                     {% endif %}
 
                     {% if photo.simulation %}
                     <div class="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-500 flex-shrink-0"
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                        </svg>
-                        <span>{{ photo.simulation }}</span>
+                        <div class="bg-gray-100 p-2 rounded-full mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-photo-accent" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Simulation</p>
+                            <p class="font-medium">{{ photo.simulation }}</p>
+                        </div>
                     </div>
                     {% endif %}
                 </div>
