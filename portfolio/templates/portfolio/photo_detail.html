@@ -2,6 +2,15 @@
 
 {% block title %}{{ photo.title }} | Brandon Hucks{% endblock %}
 
+{% block extra_head %}
+{% if next_photo_url %}
+<link rel="preload" href="{{ next_photo_url }}" as="image">
+{% endif %}
+{% if previous_photo_url %}
+<link rel="preload" href="{{ previous_photo_url }}" as="image">
+{% endif %}
+{% endblock %}
+
 {% block content %}
 <div class="container mx-auto px-4">
     <div class="py-8">

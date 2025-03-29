@@ -238,6 +238,12 @@ class PhotoDetailView(DetailView):
         if category_slug:
             context['current_category'] = get_object_or_404(Category, slug=category_slug)
         
+        # Add preload URLs for next and previous images to enable instant loading
+        if next_photo:
+            context['next_photo_url'] = next_photo.image.url
+        if previous_photo:
+            context['previous_photo_url'] = previous_photo.image.url
+        
         return context
 
 class AboutView(TemplateView):
