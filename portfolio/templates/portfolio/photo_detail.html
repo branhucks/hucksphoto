@@ -3,13 +3,56 @@
 {% block title %}{{ photo.title }} | Brandon Hucks{% endblock %}
 
 {% block extra_head %}
-<!-- Preload adjacent images -->
+<!-- Critical preloads -->
+{% if photo.image_webp %}
+<link rel="preload" href="{{ photo.image_webp.url }}" as="image" fetchpriority="high">
+{% else %}
+<link rel="preload" href="{{ photo.image.url }}" as="image" fetchpriority="high">
+{% endif %}
+
+<!-- Preload adjacent images with lower priority -->
 {% if next_photo_url %}
-<link rel="preload" href="{{ next_photo_url }}" as="image" fetchpriority="high">
+<link rel="preload" href="{{ next_photo_url }}" as="image" fetchpriority="low">
 {% endif %}
 {% if previous_photo_url %}
-<link rel="preload" href="{{ previous_photo_url }}" as="image" fetchpriority="high">
+<link rel="preload" href="{{ previous_photo_url }}" as="image" fetchpriority="low">
 {% endif %}
+
+<style>
+    .image-container {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .image-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .photo-img {
+        max-width: 100%;
+        border-radius: 0.5rem;
+        max-height: 70vh;
+        width: auto;
+        height: auto;
+        object-contain: contain;
+    }
+    
+    .photo-img.hidden {
+        opacity: 0;
+    }
+    
+    .photo-img {
+        opacity: 1;
+        transition: opacity 0.15s ease-out;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -57,9 +100,33 @@
         <!-- Photo container -->
         <div class="lg:col-span-2 bg-white rounded-lg overflow-hidden shadow-lg">
             <div class="relative flex justify-center items-center py-4 px-2">
-                <!-- Main image -->
-                <img src="{{ photo.image.url }}" alt="{{ photo.title }}"
-                    class="max-w-full rounded-lg max-h-[70vh] w-auto h-auto object-contain" loading="eager" fetchpriority="high" width="{{ photo.image.width }}" height="{{ photo.image.height }}">
+                <div class="image-container">
+                    <div class="image-wrapper">
+                        <!-- Main image - directly load the best available image -->
+                        <img 
+                            src="{% if photo.image_webp %}{{ photo.image_webp.url }}{% else %}{{ photo.image.url }}{% endif %}" 
+                            alt="{{ photo.title }}"
+                            class="photo-img{% if photo.image_thumbnail %} hidden{% endif %}"
+                            width="{{ photo.image.width }}" 
+                            height="{{ photo.image.height }}"
+                            id="main-photo"
+                            loading="eager"
+                            decoding="async"
+                        >
+                        
+                        <!-- Only use thumbnail as fallback if available -->
+                        {% if photo.image_thumbnail %}
+                        <img 
+                            src="{{ photo.image_thumbnail.url }}" 
+                            alt="{{ photo.title }}"
+                            class="photo-img absolute inset-0" 
+                            width="{{ photo.image.width }}" 
+                            height="{{ photo.image.height }}"
+                            id="thumbnail"
+                        >
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -160,4 +227,66 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Minimal image loading management
+        const mainPhoto = document.getElementById('main-photo');
+        const thumbnail = document.getElementById('thumbnail');
+        
+        if (mainPhoto) {
+            // Reveal main photo as soon as it's loaded
+            if (mainPhoto.complete) {
+                mainPhoto.classList.remove('hidden');
+                if (thumbnail) {
+                    thumbnail.style.display = 'none';
+                }
+            } else {
+                mainPhoto.onload = function() {
+                    mainPhoto.classList.remove('hidden');
+                    if (thumbnail) {
+                        thumbnail.style.display = 'none';
+                    }
+                };
+            }
+        }
+        
+        // Background preload of adjacent images without affecting page performance
+        function preloadAdjacentPhotos() {
+            {% if next_photo.image %}
+                (new Image()).src = "{% if next_photo.image_webp %}{{ next_photo.image_webp.url }}{% else %}{{ next_photo.image.url }}{% endif %}";
+            {% endif %}
+            
+            {% if previous_photo.image %}
+                (new Image()).src = "{% if previous_photo.image_webp %}{{ previous_photo.image_webp.url }}{% else %}{{ previous_photo.image.url }}{% endif %}";
+            {% endif %}
+        }
+        
+        // Defer adjacent photo preloading after main content is loaded
+        if (window.requestIdleCallback) {
+            requestIdleCallback(preloadAdjacentPhotos);
+        } else {
+            setTimeout(preloadAdjacentPhotos, 1000);
+        }
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            // Left arrow key for previous photo
+            if (e.key === 'ArrowLeft') {
+                {% if previous_photo %}
+                    window.location.href = "{% if current_category %}{% url 'portfolio:category_photo_detail' current_category.slug previous_photo.slug %}{% else %}{% url 'portfolio:photo_detail' previous_photo.slug %}{% endif %}";
+                {% endif %}
+            }
+            
+            // Right arrow key for next photo
+            if (e.key === 'ArrowRight') {
+                {% if next_photo %}
+                    window.location.href = "{% if current_category %}{% url 'portfolio:category_photo_detail' current_category.slug next_photo.slug %}{% else %}{% url 'portfolio:photo_detail' next_photo.slug %}{% endif %}";
+                {% endif %}
+            }
+        });
+    });
+</script>
 {% endblock %}
