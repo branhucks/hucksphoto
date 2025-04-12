@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
+{% load static %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Preload the logo image -->
+    <link rel="preload" href="{% static 'portfolio/img/hucksphoto.png' %}" as="image" type="image/png" fetchpriority="high">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/5.0.0/imagesloaded.pkgd.min.js"></script>
     <title>{% block title %}Photography Portfolio{% endblock %}</title>
     <!-- Modern UI with TailwindCSS -->
@@ -41,12 +43,11 @@
 </head>
 
 <body class="bg-photo-light text-photo-dark min-h-screen flex flex-col">
-    {% load static %}
     <!-- Navigation -->
     <header class="fixed w-full bg-photo-light/90 backdrop-blur-sm z-50">
         <nav class="container mx-auto px-4 py-6 flex justify-between items-center">
             <a href="{% url 'portfolio:home' %}" class="flex items-center">
-                <img src="{% static 'portfolio/img/hucksphoto.png' %}" alt="Brandon Hucks Logo" class="h-10">
+                <img src="{% static 'portfolio/img/hucksphoto.png' %}" alt="Brandon Hucks Logo" class="h-10" fetchpriority="high">
             </a>
 
             <!-- Mobile menu button -->
